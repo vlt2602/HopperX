@@ -1,23 +1,29 @@
-# config.py
+import os
 
-BINANCE_API_KEY = "Zy0M609mbjFTQOksRx0BML4bRQzyXGRO9d3RTIiWLmHDylSt5xzfQdjc84giFVZM"
-BINANCE_SECRET = "GP0OdHCWaF37scu0HqNmHoVz4eMiV8vvz9WDgQDfwyTULqNrLmhxRvXZ3zNQGbQE"
+# --- Binance ---
+BINANCE_API_KEY = os.getenv("BINANCE_API_KEY")
+BINANCE_SECRET = os.getenv("BINANCE_API_SECRET")
 
-TELEGRAM_TOKEN = "7951632552:AAFOBdhFlEW3HafWCzi6-Us0uSUkIKhM4TI"
-TELEGRAM_CHAT_ID = 1291424537
-ALLOWED_CHAT_ID = 1291424537  # cùng giá trị để chặn người lạ
+# --- Telegram ---
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = int(os.getenv("TELEGRAM_CHAT_ID", "0"))
+ALLOWED_CHAT_ID = TELEGRAM_CHAT_ID  # Cùng 1 giá trị để hạn chế người lạ
 
+# --- Giao dịch ---
 TRADE_SYMBOLS = ["ETH/USDT", "BTC/USDT"]
 TRADE_PERCENT = 0.05  # fallback nếu không dùng vốn cố định
 
+# --- Vốn cố định ---
 USE_FIXED_CAPITAL = True
 FIXED_USDT_PER_ORDER = 15
 
-# Quản lý vốn đầu tư giới hạn
+# --- Giới hạn vốn đầu tư ---
 USE_CAPITAL_LIMIT = True
-CAPITAL_LIMIT = 500
+CAPITAL_LIMIT = 500  # USDT giới hạn đầu tư
 
+# --- Ghi log Google Sheet ---
 USE_GOOGLE_SHEET = False
-SHEET_WEBHOOK = ""
+SHEET_WEBHOOK = os.getenv("SHEET_WEBHOOK", "")
 
+# --- Giới hạn lỗ trong ngày ---
 DAILY_MAX_LOSS = -30  # cho phép lỗ tối đa 30 USDT/ngày
