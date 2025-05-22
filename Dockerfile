@@ -1,20 +1,22 @@
-# Sử dụng bản đầy đủ Debian để build an toàn
 FROM python:3.10-bullseye
 
-# Thiết lập thư mục làm việc
 WORKDIR /app
 
-# Cài pip mới + hỗ trợ build
+# Cài pip và công cụ build
 RUN pip install --upgrade pip setuptools wheel
 
-# Sao chép mã nguồn vào container
 COPY . .
 
-# Cài đặt thư viện yêu cầu
-RUN pip install --no-cache-dir -r requirements.txt
+# Cài từng thư viện riêng để xác định lỗi cụ thể
+RUN pip install flask
+RUN pip install python-binance
+RUN pip install python-telegram-bot==13.15
+RUN pip install apscheduler
+RUN pip install pandas
+RUN pip install numpy
+RUN pip install requests
+RUN pip install nest_asyncio
 
-# Mở cổng Flask
 EXPOSE 5000
 
-# Chạy ứng dụng
 CMD ["python", "flask_app.py"]
