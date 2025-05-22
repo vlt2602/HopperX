@@ -1,13 +1,15 @@
 from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes
 from config import TELEGRAM_TOKEN, ALLOWED_CHAT_ID
 import builtins
 import asyncio
 import signal
 from strategy_metrics import get_strategy_scores
 from balance_helper import get_balance, get_used_capital
+import pandas as pd
+import os
 
-# ====== Biến toàn cục mặc định ======
+# Biến toàn cục
 builtins.panic_mode = False
 builtins.loss_streak = 0
 builtins.capital_limit = 500
@@ -15,14 +17,11 @@ builtins.capital_limit_init = 500
 builtins.bot_active = True
 builtins.last_order = None
 
-
-# ====== CÁC LỆNH CHÍNH ======
+# Các lệnh
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.id != ALLOWED_CHAT_ID: return
     state = "🟢 ĐANG CHẠY" if builtins.bot_active else "🔴 ĐANG DỪNG"
-    await update.message.reply_text(
-        f"✅ HopperX đang hoạt động!\nTrạng thái bot: {state}")
-
+    await update.message.reply_text(f"✅ HopperX đang hoạt động!\nTrạng thái bot: {state}")
 
 async def resume(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.id != ALLOWED_CHAT_ID: return
@@ -30,13 +29,11 @@ async def resume(update: Update, context: ContextTypes.DEFAULT_TYPE):
     builtins.loss_streak = 0
     await update.message.reply_text("✅ Đã gỡ Panic Stop. Tiếp tục giao dịch.")
 
-
 async def toggle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.id != ALLOWED_CHAT_ID: return
     builtins.bot_active = not builtins.bot_active
     state = "🟢 Bot ĐANG CHẠY" if builtins.bot_active else "🔴 Bot ĐÃ DỪNG"
     await update.message.reply_text(f"⚙️ Trạng thái bot: {state}")
-
 
 async def setcapital(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.id != ALLOWED_CHAT_ID: return
@@ -44,12 +41,9 @@ async def setcapital(update: Update, context: ContextTypes.DEFAULT_TYPE):
         amount = float(context.args[0])
         builtins.capital_limit = amount
         builtins.capital_limit_init = amount
-        await update.message.reply_text(f"✅ Cập nhật vốn tối đa: {amount} USDT"
-                                        )
+        await update.message.reply_text(f"✅ Cập nhật vốn tối đa: {amount} USDT")
     except:
-        await update.message.reply_text(
-            "❌ Sai cú pháp. Dùng: /setcapital [số_usdt]")
-
+        await update.message.reply_text("❌ Sai cú pháp. Dùng: /setcapital [số_usdt]")
 
 async def capital(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.id != ALLOWED_CHAT_ID: return
@@ -65,7 +59,6 @@ async def capital(update: Update, context: ContextTypes.DEFAULT_TYPE):
            f"• Vốn còn lại: {remaining_cap:.2f} USDT")
     await update.message.reply_text(msg, parse_mode="Markdown")
 
-
 async def strategy(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.id != ALLOWED_CHAT_ID: return
     scores = get_strategy_scores(days=7)
@@ -74,40 +67,29 @@ async def strategy(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     lines = ["📊 Hiệu suất chiến lược 7 ngày:"]
     for name, s in scores.items():
-        lines.append(
-            f"• {name}: {s['winrate']}% | {s['pnl']} USDT | score={s['score']}"
-        )
+        lines.append(f"• {name}: {s['winrate']}% | {s['pnl']} USDT | score={s['score']}")
     await update.message.reply_text("\n".join(lines))
-
 
 async def lastorder(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.id != ALLOWED_CHAT_ID: return
     msg = builtins.last_order or "⚠️ Chưa có lệnh nào gần đây."
     await update.message.reply_text(f"📦 Lệnh gần nhất:\n{msg}")
 
-
 async def report(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.id != ALLOWED_CHAT_ID: return
-    await update.message.reply_text(
-        "📅 Báo cáo tự động lúc 05:00 hàng ngày & 05:01 Chủ nhật.")
+    await update.message.reply_text("📅 Báo cáo tự động lúc 05:00 hàng ngày & 05:01 Chủ nhật.")
 
-
-# ====== VỐN NÂNG CAO ======
 async def addcapital(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.id != ALLOWED_CHAT_ID: return
     builtins.capital_limit += 100
     builtins.capital_limit_init += 100
-    await update.message.reply_text(
-        f"➕ Tăng vốn +100\n👉 Vốn hiện tại: {builtins.capital_limit} USDT")
-
+    await update.message.reply_text(f"➕ Tăng vốn +100\n👉 Vốn hiện tại: {builtins.capital_limit} USDT")
 
 async def removecapital(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.id != ALLOWED_CHAT_ID: return
     builtins.capital_limit = max(0, builtins.capital_limit - 100)
     builtins.capital_limit_init = max(0, builtins.capital_limit_init - 100)
-    await update.message.reply_text(
-        f"➖ Giảm vốn -100\n👉 Vốn hiện tại: {builtins.capital_limit} USDT")
-
+    await update.message.reply_text(f"➖ Giảm vốn -100\n👉 Vốn hiện tại: {builtins.capital_limit} USDT")
 
 async def resetcapital(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.id != ALLOWED_CHAT_ID: return
@@ -115,24 +97,45 @@ async def resetcapital(update: Update, context: ContextTypes.DEFAULT_TYPE):
     builtins.capital_limit_init = 500
     await update.message.reply_text("🔁 Reset vốn về mặc định: 500 USDT")
 
-
-# ====== MENU MINI APP ======
-# ====== MENU MINI APP ĐẦY ĐỦ ======
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.id != ALLOWED_CHAT_ID: return
-
     buttons = [["/status", "/toggle", "/resume", "/pause"],
                ["/capital", "/setcapital 500", "/lastorder"],
                ["/addcapital", "/removecapital", "/strategy"],
                ["/report", "/top", "/resetlog"], ["/menu"]]
     markup = ReplyKeyboardMarkup(buttons, resize_keyboard=True)
-    await update.message.reply_text("📋 Menu điều khiển HopperX:",
-                                    reply_markup=markup)
+    await update.message.reply_text("📋 Menu điều khiển HopperX:", reply_markup=markup)
 
+async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.id != ALLOWED_CHAT_ID: return
+    try:
+        df = pd.read_csv("strategy_log.csv", header=None, names=["time", "symbol", "strategy", "result", "pnl"])
+        df["pnl"] = pd.to_numeric(df["pnl"], errors="coerce")
+        summary = df.groupby("strategy")["pnl"].sum().sort_values(ascending=False)
+        if summary.empty:
+            await update.message.reply_text("⚠️ Chưa có dữ liệu chiến lược.")
+            return
+        best = summary.idxmax()
+        await update.message.reply_text(f"🏆 Chiến lược tốt nhất: {best} ({summary[best]:.2f} USDT)")
+    except Exception as e:
+        await update.message.reply_text(f"❌ Lỗi /top: {e}")
 
-# ====== KHỞI ĐỘNG BOT ======
+async def resetlog(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.id != ALLOWED_CHAT_ID: return
+    try:
+        open("strategy_log.csv", "w").close()
+        await update.message.reply_text("🗑 Đã xoá toàn bộ log chiến lược.")
+    except:
+        await update.message.reply_text("❌ Không thể xoá file log.")
+
+async def pause(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.id != ALLOWED_CHAT_ID: return
+    builtins.bot_active = False
+    await update.message.reply_text("⏸ Bot đã tạm dừng. Gõ /resume để chạy lại.")
+
+# Khởi chạy bot
 async def start_telegram_bot():
-    app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+    app = Application().token(TELEGRAM_TOKEN).build()
 
     app.add_handler(CommandHandler("status", status))
     app.add_handler(CommandHandler("resume", resume))
@@ -162,45 +165,3 @@ async def start_telegram_bot():
 
     await app.stop()
     await app.shutdown()
-
-
-import os
-import pandas as pd
-
-
-# /top – Xem chiến lược hiệu quả nhất tuần
-async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.id != ALLOWED_CHAT_ID: return
-    try:
-        df = pd.read_csv("strategy_log.csv",
-                         header=None,
-                         names=["time", "symbol", "strategy", "result", "pnl"])
-        df["pnl"] = pd.to_numeric(df["pnl"], errors="coerce")
-        summary = df.groupby("strategy")["pnl"].sum().sort_values(
-            ascending=False)
-        if summary.empty:
-            await update.message.reply_text("⚠️ Chưa có dữ liệu chiến lược.")
-            return
-        best = summary.idxmax()
-        await update.message.reply_text(
-            f"🏆 Chiến lược tốt nhất: {best} ({summary[best]:.2f} USDT)")
-    except Exception as e:
-        await update.message.reply_text(f"❌ Lỗi /top: {e}")
-
-
-# /resetlog – Xoá sạch log chiến lược
-async def resetlog(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.id != ALLOWED_CHAT_ID: return
-    try:
-        open("strategy_log.csv", "w").close()
-        await update.message.reply_text("🗑 Đã xoá toàn bộ log chiến lược.")
-    except:
-        await update.message.reply_text("❌ Không thể xoá file log.")
-
-
-# /pause – Dừng bot ngay lập tức
-async def pause(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.id != ALLOWED_CHAT_ID: return
-    builtins.bot_active = False
-    await update.message.reply_text(
-        "⏸ Bot đã tạm dừng. Gõ /resume để chạy lại.")
