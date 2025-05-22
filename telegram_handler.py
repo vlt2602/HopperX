@@ -8,6 +8,9 @@ from strategy_metrics import get_strategy_scores
 from balance_helper import get_balance, get_used_capital
 import os
 import pandas as pd
+import telegram
+print("📦 Thư viện telegram đang dùng:", telegram.__file__)
+print("📦 Phiên bản:", telegram.__version__)
 
 # ====== Biến toàn cục ======
 builtins.panic_mode = False
