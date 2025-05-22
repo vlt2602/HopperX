@@ -4,6 +4,9 @@ FROM python:3.10-slim
 # Thiết lập thư mục làm việc
 WORKDIR /app
 
+# Cài pip mới + hỗ trợ biên dịch tốt hơn
+RUN pip install --upgrade pip setuptools wheel
+
 # Sao chép mã nguồn vào container
 COPY . .
 
