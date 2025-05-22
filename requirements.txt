@@ -1,8 +1,8 @@
-flask==2.2.5
-python-binance==1.0.15
+flask
+python-binance
 python-telegram-bot==13.15
-apscheduler==3.7.0
-pandas==1.3.5
-numpy==1.21.4
+apscheduler
+pandas
+numpy
 requests
 nest_asyncio
