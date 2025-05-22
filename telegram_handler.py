@@ -2,11 +2,11 @@ from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from config import TELEGRAM_TOKEN, ALLOWED_CHAT_ID
 import builtins
+import pandas as pd
 from strategy_metrics import get_strategy_scores
 from balance_helper import get_balance, get_used_capital
-import pandas as pd
 
-# ====== Biến toàn cục ======
+# ✅ Khởi tạo biến toàn cục
 builtins.panic_mode = False
 builtins.loss_streak = 0
 builtins.capital_limit = 500
@@ -14,13 +14,13 @@ builtins.capital_limit_init = 500
 builtins.bot_active = True
 builtins.last_order = None
 
-# ====== Các handler như anh đã có (giữ nguyên) ======
-# (không lặp lại ở đây để tránh quá dài – code anh chuẩn)
+# (giữ nguyên các hàm status, resume, capital,... như anh có)
 
-# ====== KHỞI ĐỘNG BOT ======
+# ✅ KHỞI ĐỘNG BOT
 async def start_telegram_bot():
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
+    # Đăng ký lệnh
     app.add_handler(CommandHandler("status", status))
     app.add_handler(CommandHandler("resume", resume))
     app.add_handler(CommandHandler("toggle", toggle))
@@ -37,7 +37,6 @@ async def start_telegram_bot():
     app.add_handler(CommandHandler("resetlog", resetlog))
     app.add_handler(CommandHandler("pause", pause))
 
-    print("✅ Telegram bot khởi động...")
+    print("🚀 Telegram bot đã khởi động - Đang polling...")
 
-    # Dùng run_polling (phiên bản chính thức của v20+)
     await app.run_polling()
