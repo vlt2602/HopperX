@@ -1,9 +1,9 @@
 flask
 python-binance
-python-telegram-bot==20.3
+python-telegram-bot==20.6
 apscheduler
 pandas
 numpy
 requests
 nest_asyncio
-ccxt==4.1.67
+ccxt
