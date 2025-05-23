@@ -7,6 +7,12 @@ from balance_helper import get_balance, get_used_capital
 from config import ALLOWED_CHAT_ID
 
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print("🆔 Người gửi:", update.effective_chat.id)  # ← DÒNG NÀY
+    if update.effective_chat.id != ALLOWED_CHAT_ID:
+        return
+    state = "🟢 ĐANG CHẠY" if builtins.bot_active else "🔴 ĐANG DỪNG"
+    await update.message.reply_text(f"✅ HopperX đang hoạt động!\nTrạng thái bot: {state}")
     if update.effective_chat.id != ALLOWED_CHAT_ID: return
     state = "🟢 ĐANG CHẠY" if builtins.bot_active else "🔴 ĐANG DỪNG"
     await update.message.reply_text(f"✅ HopperX đang hoạt động!\nTrạng thái bot: {state}")
