@@ -1,15 +1,25 @@
 from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import ContextTypes
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import builtins
 import pandas as pd
 from strategy_metrics import get_strategy_scores
 from balance_helper import get_balance, get_used_capital
-from config import ALLOWED_CHAT_ID
+from config import TELEGRAM_TOKEN, ALLOWED_CHAT_ID
+
+# Khởi tạo biến toàn cục
+builtins.panic_mode = False
+builtins.loss_streak = 0
+builtins.capital_limit = 500
+builtins.capital_limit_init = 500
+builtins.bot_active = True
+builtins.last_order = None
+
+# ======================== HANDLERS ========================
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("🤖 HopperX đã sẵn sàng! Gõ /menu để xem các lệnh.")
 
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    print("🆔 Người gửi:", update.effective_chat.id)  # ← DÒNG NÀY
-    state = "🟢 ĐANG CHẠY" if builtins.bot_active else "🔴 ĐANG DỪNG"
-    await update.message.reply_text(f"✅ HopperX đang hoạt động!\nTrạng thái bot: {state}")
     if update.effective_chat.id != ALLOWED_CHAT_ID: return
     state = "🟢 ĐANG CHẠY" if builtins.bot_active else "🔴 ĐANG DỪNG"
     await update.message.reply_text(f"✅ HopperX đang hoạt động!\nTrạng thái bot: {state}")
@@ -90,7 +100,7 @@ async def resetcapital(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.id != ALLOWED_CHAT_ID: return
-    buttons = [["/status", "/toggle", "/resume", "/pause"],
+    buttons = [["/start", "/status", "/resume", "/pause"],
                ["/capital", "/setcapital 500", "/lastorder"],
                ["/addcapital", "/removecapital", "/strategy"],
                ["/report", "/top", "/resetlog"], ["/menu"]]
@@ -125,3 +135,28 @@ async def pause(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.id != ALLOWED_CHAT_ID: return
     builtins.bot_active = False
     await update.message.reply_text("⏸ Bot đã tạm dừng. Gõ /resume để chạy lại.")
+
+# ======================== KHỞI ĐỘNG BOT ========================
+
+async def start_telegram_bot():
+    app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("status", status))
+    app.add_handler(CommandHandler("resume", resume))
+    app.add_handler(CommandHandler("toggle", toggle))
+    app.add_handler(CommandHandler("setcapital", setcapital))
+    app.add_handler(CommandHandler("capital", capital))
+    app.add_handler(CommandHandler("strategy", strategy))
+    app.add_handler(CommandHandler("lastorder", lastorder))
+    app.add_handler(CommandHandler("report", report))
+    app.add_handler(CommandHandler("addcapital", addcapital))
+    app.add_handler(CommandHandler("removecapital", removecapital))
+    app.add_handler(CommandHandler("resetcapital", resetcapital))
+    app.add_handler(CommandHandler("menu", menu))
+    app.add_handler(CommandHandler("top", top))
+    app.add_handler(CommandHandler("resetlog", resetlog))
+    app.add_handler(CommandHandler("pause", pause))
+
+    print("🚀 Telegram bot đã khởi động - Đang polling...")
+    await app.run_polling()
