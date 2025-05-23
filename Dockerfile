@@ -20,3 +20,4 @@ RUN pip install nest_asyncio
 EXPOSE 5000
 
 CMD ["python", "flask_app.py"]
+CMD ["python", "bot_runner.py"]
