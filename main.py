@@ -22,20 +22,18 @@ def run_scheduler_safe():
     except Exception as e:
         print("❌ Lỗi scheduler:", e)
 
-def run_telegram_bot():
-    try:
-        asyncio.run(start_telegram_bot())
-    except Exception as e:
-        print("❌ Telegram Bot lỗi:", e)
+# ✅ KHỞI ĐỘNG TẤT CẢ BẰNG asyncio.run() duy nhất
+async def run_all():
+    # Khởi động các task song song bằng asyncio
+    telegram_task = asyncio.create_task(start_telegram_bot())
+    trade_task = asyncio.create_task(smart_trade_loop())
 
-def run_smart_trade():
-    try:
-        asyncio.run(smart_trade_loop())
-    except Exception as e:
-        print("❌ Smart Trade lỗi:", e)
+    await asyncio.gather(telegram_task, trade_task)
 
 if __name__ == "__main__":
+    # 🔁 Flask & Scheduler chạy bằng thread
     threading.Thread(target=run_flask).start()
     threading.Thread(target=run_scheduler_safe).start()
-    threading.Thread(target=run_telegram_bot).start()
-    threading.Thread(target=run_smart_trade).start()
+
+    # 🔁 Telegram bot + Smart Trade chạy trong asyncio
+    asyncio.run(run_all())
